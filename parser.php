@@ -57,10 +57,11 @@ function get($categories, $from = 1, $to = 200)
         $result = json_decode(parse($page), true);
 
         foreach ($result['sites'] as $site) {
-            $resultArray['sites'] = [
+            $resultArray['sites'][] = [
                 'category' => $categories[$site['category']],
                 'title' => $site['title'],
                 'url' => $site['url'],
+                'img' => $site['img_auto'],
             ];
         }
 
@@ -71,10 +72,51 @@ function get($categories, $from = 1, $to = 200)
     return $resultArray;
 }
 
-function template($data, $file = 'index.html')
+function findKeys($template)
 {
+    $result = [];
 
+    preg_match_all('/{{[a-zA-Z0-9_\s]+}}/', $template, $matches);
+
+    foreach ($matches[0] as $match) {
+        $result[clearKey($match)] = $match;
+    }
+
+    return $result;
 }
 
-$result = get($categories);
+function clearKey($key)
+{
+    $key = str_replace('{', '', $key);
+    $key = str_replace('}', '', $key);
+    $key = str_replace(' ', '', $key);
+
+    return $key;
+}
+
+function replaceKey($template, $keys, $data)
+{
+    foreach ($keys as $key => $keyName) {
+        if (isset($data[$key]) && !empty($data[$key])) $template = str_replace($keyName, $data[$key], $template);
+        else $template = str_replace($keyName, "NO DATA FOR THIS KEY - $keyName", $template);
+    }
+
+    return $template;
+}
+
+function template($data, $file = 'index.html')
+{
+    $template = file_get_contents('template.html');
+    $render = '';
+    foreach ($data['sites'] as $site) {
+        $render .= replaceKey($template, findKeys($template), $site);
+    }
+
+    $data['render'] = $render;
+
+    $index = file_get_contents('empty_index.html');
+    file_put_contents('index.html', replaceKey($index, findKeys($index), $data));
+}
+
+$result = get($categories, 1, 1);
 template($result);
