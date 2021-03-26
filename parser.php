@@ -1,16 +1,23 @@
 <?php
 
-$categories = [
-    'all' => 'Все (All)',
-    'bu' => 'Бизнес (Business)',
-    'st' => 'Магазин (Store)',
-    'ev' => 'Мероприятие (Event)',
-    'ed' => 'Медиа (Media)',
-    'pf' => 'Портфолио (Portfolio)',
-    'cu' => 'Образование (Education)',
-    'pr' => 'Персональные',
-    'ot' => 'Другое'
-];
+
+
+function get_category($name) {
+    $categories = [
+        'all' => 'Все (All)',
+        'bu' => 'Бизнес (Business)',
+        'st' => 'Магазин (Store)',
+        'ev' => 'Мероприятие (Event)',
+        'ed' => 'Медиа (Media)',
+        'pf' => 'Портфолио (Portfolio)',
+        'cu' => 'Образование (Education)',
+        'pr' => 'Персональные',
+        'ot' => 'Другое'
+    ];
+
+    if (isset($categories[$name]) === false) return 'None (Неизвестно)';
+    else return $categories[$name];
+}
 
 function parse($page)
 {
@@ -48,7 +55,7 @@ function parse($page)
     return $result;
 }
 
-function get($categories, $from = 1, $to = 200)
+function get($from = 1, $to = 200)
 {
     $resultArray = array();
     $resultArray['lastUpdated'] = date('d.m.Y');
@@ -58,7 +65,7 @@ function get($categories, $from = 1, $to = 200)
 
         foreach ($result['sites'] as $site) {
             $resultArray['sites'][] = [
-                'category' => $categories[$site['category']],
+                'category' => get_category($site['category']),
                 'title' => $site['title'],
                 'url' => $site['url'],
                 'img' => $site['img_auto'],
@@ -118,5 +125,5 @@ function template($data, $file = 'index.html')
     file_put_contents('index.html', replaceKey($index, findKeys($index), $data));
 }
 
-$result = get($categories, 1, 1);
+$result = get(1, 500);
 template($result);
